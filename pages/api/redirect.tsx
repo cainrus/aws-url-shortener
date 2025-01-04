@@ -1,0 +1,24 @@
+import { NextApiRequest, NextApiResponse } from "next";
+import { findLongUrl } from "@/shared/utils/findLongUrl";
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    const { target } = req.query;
+
+    if (!target || typeof target !== "string") {
+        return res.status(400).json({ error: "Target URL is required" });
+    }
+
+    try {
+        const location = await findLongUrl({ short: target });
+
+        if (location) {
+            res.writeHead(302, { Location: `https://${location}` });
+            res.end();
+            return;
+        }
+    } catch (err) {
+        console.error("Error in findLongUrl:", err);
+    }
+
+    res.status(404).end();
+}

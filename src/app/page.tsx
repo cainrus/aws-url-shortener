@@ -1,47 +1,29 @@
 'use client'
 
-import {isObject, useFetch} from "@/shared/utils";
-import React, {useEffect, useState} from "react";
+import {isObject} from "@/shared/utils";
+import React from "react";
 import Link from "next/link";
 import { isURL } from 'validator';
 
 function Home() {
   const [isURLValid, setIsURLValid] = React.useState(true);
   const [url, setURL] = React.useState({ long: "", short: "" });
-
-
-
-  interface SubmitUrlResult {
-    data: {
-      createURL: {
-        long: string;
-      }
-    }
-  }
-
-  function useSubmitUrl(payload: string): {
-      fetchData(options?: RequestInit): void;
-      result: null | string;
-  } {
-    const [result, setResult] = useState<string | null>(null)
-
-    const result = useFetch<{data: {createURL: {long: string}}}>("/api/shorten", {
+  async function submitUrl(url: string): Promise<string> {
+    const res = await fetch("/api/shorten", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({url}),
     });
-    const fullUrl = result.data?.data.createURL.long;
-    if (typeof fullUrl !== 'string' || !fullUrl) {
-      throw new Error('Invalid url');
-    }
-
-    return {
-      fetchData: result.fetchData,
-      body: JSON.stringify({url: payload}),
-    }
-
-    return fullUrl;
+    const data = await res.json();
+    if (
+        !isObject(data)
+        || !isObject(data.data)
+        || !isObject(data.data.createURL)
+        || typeof (data.data.createURL.long) !== 'string'
+    ) throw new Error('res.json() result is invalid type');
+    return data.data.createURL;
   }
 
   return (
@@ -68,8 +50,8 @@ function Home() {
                             && isURL(e.target.value)) {
                           const longUrl = e.target.value;
                           setIsURLValid(true);
-                          const long = useSubmitUrl(longUrl);
-                          setURL({ ...all, long });
+                          const url = await submitUrl(longUrl);
+                          setURL(url);
 
                         } else {
                           setIsURLValid(false);
