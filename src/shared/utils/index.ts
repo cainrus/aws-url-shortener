@@ -1,5 +1,4 @@
 export {getGqlConfig} from './getGqlConfig';
-export {useFetch} from './useFetch';
 
 export function isObject(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
