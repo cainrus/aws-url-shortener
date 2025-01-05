@@ -1,6 +1,5 @@
 'use client'
 
-import {isObject} from "@/shared/utils";
 import React from "react";
 import Link from "next/link";
 import { isURL } from 'validator';
@@ -8,7 +7,7 @@ import { isURL } from 'validator';
 function Home() {
   const [isURLValid, setIsURLValid] = React.useState(true);
   const [url, setURL] = React.useState({ long: "", short: "" });
-  async function submitUrl(url: string): Promise<string> {
+  async function submitUrl(url: string): Promise<{short: string; long: string;}> {
     const res = await fetch("/api/shorten", {
       method: "POST",
       headers: {
@@ -16,14 +15,10 @@ function Home() {
       },
       body: JSON.stringify({url}),
     });
-    const data = await res.json();
-    if (
-        !isObject(data)
-        || !isObject(data.data)
-        || !isObject(data.data.createURL)
-        || typeof (data.data.createURL.long) !== 'string'
-    ) throw new Error('res.json() result is invalid type');
-    return data.data.createURL;
+    const { data } = await res.json();
+    const { short, long } = data.createURL;
+    if (typeof short !== 'string' || typeof long !== 'string') throw new Error('Bad response');
+    return { short, long };
   }
 
   return (
@@ -50,8 +45,8 @@ function Home() {
                             && isURL(e.target.value)) {
                           const longUrl = e.target.value;
                           setIsURLValid(true);
-                          const url = await submitUrl(longUrl);
-                          setURL(url);
+                          const data = await submitUrl(longUrl);
+                          setURL(data);
 
                         } else {
                           setIsURLValid(false);
