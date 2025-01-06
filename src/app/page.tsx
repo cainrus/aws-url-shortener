@@ -37,8 +37,20 @@ export default function Home() {
 
   async function handleCopy() {
     if (url) {
+      const textToCopy = `${location.host}/${url.short}`;
       try {
-        await navigator.clipboard.writeText(`${location.host}/${url.short}`);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          // Use Clipboard API if available
+          await navigator.clipboard.writeText(textToCopy);
+        } else {
+          // Fallback for older browsers or restricted environments
+          const tempInput = document.createElement('textarea');
+          tempInput.value = textToCopy;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempInput);
+        }
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000); // Reset success message after 2 seconds
       } catch (error) {
@@ -47,19 +59,22 @@ export default function Home() {
     }
   }
 
+
   return (
-      <main className="grid place-items-center h-screen">
-        <div className="bg-cyan-900 w-full grid place-content-center py-20 px-6 sm:px-16 lg:px-32">
-          <h1 className="text-center text-4xl text-white font-bold mb-6">URL Shortener</h1>
+      <main className="min-h-screen flex items-start sm:items-center justify-center bg-cyan-900">
+        <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6 sm:p-8">
+        <h1 className="text-center text-2xl sm:text-3xl font-bold text-cyan-800 mb-6">
+            URL Shortener
+          </h1>
           <form
               action={(formData) => startTransition(() => handleSubmit(formData))}
-              className="relative min-w-full max-w-lg"
+              className="relative w-full"
           >
             <input
                 type="text"
                 name="url"
                 placeholder="Enter link here"
-                className={`block w-full rounded-md border py-3 px-3 pr-14 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset outline-none ${
+                className={`block w-full rounded-md border py-2 px-3 sm:py-3 sm:pr-14 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset outline-none ${
                     isURLValid
                         ? 'focus:ring-cyan-600 border-gray-300'
                         : 'focus:ring-red-600 border-red-600 ring-red-600'
@@ -78,10 +93,12 @@ export default function Home() {
             </button>
           </form>
           {!isURLValid && (
-              <p className="text-red-600 mt-2 text-sm">Please enter a valid URL.</p>
+              <p className="text-red-600 mt-2 text-sm text-center">
+                Please enter a valid URL.
+              </p>
           )}
           {url && (
-              <div className="flex flex-col gap-2 mt-6 p-5 rounded-md border border-cyan-500 bg-cyan-50">
+              <div className="mt-6 p-4 rounded-md border border-cyan-500 bg-cyan-50">
                 <div className="flex items-center justify-between">
                   <p className="text-cyan-700 font-semibold">
                     <a

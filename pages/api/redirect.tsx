@@ -10,7 +10,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
         const location = await findLongUrl({ short: target });
-
         if (location) {
             const hasProtocol = location.startsWith('http://') || location.startsWith('https://');
             res.writeHead(302, { Location: hasProtocol ? location : `https://${location}` });
